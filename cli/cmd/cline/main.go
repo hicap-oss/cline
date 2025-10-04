@@ -50,6 +50,7 @@ monitoring capabilities from the terminal.`,
 	rootCmd.AddCommand(cli.NewVersionCommand())
 	rootCmd.AddCommand(cli.NewAuthCommand())
 	rootCmd.AddCommand(cli.NewTaskSendCommand())
+	rootCmd.AddCommand(cli.NewSetupCommand())
 
 	if err := rootCmd.ExecuteContext(context.Background()); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
