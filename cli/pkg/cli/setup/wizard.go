@@ -217,9 +217,7 @@ func (sw *SetupWizard) selectProvider() (string, error) {
 		Options: []string{
 			"View popular providers",
 			"View all providers",
-			"Browse by category",
 			"Search providers",
-			
 		},
 	}
 
@@ -228,8 +226,6 @@ func (sw *SetupWizard) selectProvider() (string, error) {
 	}
 
 	switch method {
-	case "Browse by category":
-		return sw.selectProviderByCategory()
 	case "View popular providers":
 		return sw.selectFromPopularProviders()
 	case "Search providers":
@@ -239,56 +235,6 @@ func (sw *SetupWizard) selectProvider() (string, error) {
 	default:
 		return "", fmt.Errorf("invalid selection method")
 	}
-}
-
-// selectProviderByCategory shows providers grouped by category
-func (sw *SetupWizard) selectProviderByCategory() (string, error) {
-	categories := sw.registry.GetProvidersByCategory()
-
-	// Select category
-	categoryNames := make([]string, 0, len(categories))
-	for category := range categories {
-		categoryNames = append(categoryNames, category)
-	}
-	sort.Strings(categoryNames)
-
-	var selectedCategory string
-	categoryPrompt := &survey.Select{
-		Message: "Select a category:",
-		Options: categoryNames,
-	}
-
-	if err := survey.AskOne(categoryPrompt, &selectedCategory); err != nil {
-		return "", fmt.Errorf("failed to get category: %w", err)
-	}
-
-	// Select provider from category
-	providers := categories[selectedCategory]
-	providerOptions := make([]string, len(providers))
-	for i, providerID := range providers {
-		providerOptions[i] = fmt.Sprintf("%s (%s)", sw.registry.GetProviderDisplayName(providerID), providerID)
-	}
-
-	var selectedProvider string
-	providerPrompt := &survey.Select{
-		Message: fmt.Sprintf("Select a provider from %s:", selectedCategory),
-		Options: providerOptions,
-	}
-
-	if err := survey.AskOne(providerPrompt, &selectedProvider); err != nil {
-		return "", fmt.Errorf("failed to get provider: %w", err)
-	}
-
-	// Extract provider ID from selection (it's the last part in parentheses)
-	// Format: "Display Name (provider-id)" or "Display Name (extra) (provider-id)"
-	lastOpenParen := strings.LastIndex(selectedProvider, "(")
-	lastCloseParen := strings.LastIndex(selectedProvider, ")")
-	if lastOpenParen == -1 || lastCloseParen == -1 || lastCloseParen < lastOpenParen {
-		return "", fmt.Errorf("invalid provider selection format")
-	}
-	providerID := strings.TrimSpace(selectedProvider[lastOpenParen+1 : lastCloseParen])
-
-	return providerID, nil
 }
 
 // selectFromPopularProviders shows popular providers
