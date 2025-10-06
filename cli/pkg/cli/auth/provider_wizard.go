@@ -1,4 +1,4 @@
-package setup
+package auth
 
 import (
 	"fmt"
@@ -8,17 +8,18 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cline/cli/pkg/cli/config"
 	"github.com/cline/cli/pkg/cli/models"
+	"github.com/cline/cli/pkg/cli/setup"
 	"github.com/cline/cli/pkg/generated"
 )
 
-// SetupWizard handles the interactive setup process
-type SetupWizard struct {
+// ProviderWizard handles the interactive provider configuration process
+type ProviderWizard struct {
 	configManager *config.ConfigManager
 	registry      *config.ProviderRegistry
 }
 
-// NewSetupWizard creates a new setup wizard
-func NewSetupWizard() (*SetupWizard, error) {
+// NewProviderWizard creates a new provider configuration wizard
+func NewProviderWizard() (*ProviderWizard, error) {
 	configManager, err := config.NewConfigManager()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create config manager: %w", err)
@@ -29,15 +30,15 @@ func NewSetupWizard() (*SetupWizard, error) {
 		return nil, fmt.Errorf("failed to create provider registry: %w", err)
 	}
 
-	return &SetupWizard{
+	return &ProviderWizard{
 		configManager: configManager,
 		registry:      registry,
 	}, nil
 }
 
-// Run runs the complete setup wizard
-func (sw *SetupWizard) Run() error {
-	fmt.Println("Welcome to Cline CLI Setup!")
+// Run runs the complete provider configuration wizard
+func (pw *ProviderWizard) Run() error {
+	fmt.Println("Welcome to Cline API Provider Configuration!")
 	fmt.Println("This wizard will help you configure API providers for the Cline CLI.")
 	fmt.Println()
 
@@ -58,51 +59,51 @@ func (sw *SetupWizard) Run() error {
 		}
 
 		if !overwrite {
-			fmt.Println("Setup cancelled.")
+			fmt.Println("Configuration cancelled.")
 			return nil
 		}
 	}
 
 	// Load existing config or create new one
-	if _, err := sw.configManager.Load(); err != nil {
+	if _, err := pw.configManager.Load(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	// Show provider selection menu
 	for {
 		// Always get the current config from ConfigManager
-		cliConfig := sw.configManager.GetConfig()
+		cliConfig := pw.configManager.GetConfig()
 
-		action, err := sw.showMainMenu(cliConfig)
+		action, err := pw.showMainMenu(cliConfig)
 		if err != nil {
 			return err
 		}
 
 		switch action {
 		case "add":
-			if err := sw.addProvider(); err != nil {
+			if err := pw.addProvider(); err != nil {
 				fmt.Printf("Error adding provider: %v\n", err)
 				continue
 			}
 		case "remove":
-			if err := sw.removeProvider(); err != nil {
+			if err := pw.removeProvider(); err != nil {
 				fmt.Printf("Error removing provider: %v\n", err)
 				continue
 			}
 		case "list":
-			sw.listConfiguredProviders()
+			pw.listConfiguredProviders()
 		case "test":
-			if err := sw.testProviders(); err != nil {
+			if err := pw.testProviders(); err != nil {
 				fmt.Printf("Error testing providers: %v\n", err)
 				continue
 			}
 		case "default":
-			if err := sw.setDefaultProvider(); err != nil {
+			if err := pw.setDefaultProvider(); err != nil {
 				fmt.Printf("Error setting default provider: %v\n", err)
 				continue
 			}
 		case "save":
-			if err := sw.saveAndExit(); err != nil {
+			if err := pw.saveAndExit(); err != nil {
 				return err
 			}
 			return nil
@@ -112,8 +113,8 @@ func (sw *SetupWizard) Run() error {
 	}
 }
 
-// showMainMenu displays the main setup menu
-func (sw *SetupWizard) showMainMenu(cliConfig *config.CLIConfig) (string, error) {
+// showMainMenu displays the main provider configuration menu
+func (pw *ProviderWizard) showMainMenu(cliConfig *config.CLIConfig) (string, error) {
 	options := []string{
 		"Add a new provider",
 		"Remove a provider",
@@ -155,17 +156,17 @@ func (sw *SetupWizard) showMainMenu(cliConfig *config.CLIConfig) (string, error)
 }
 
 // addProvider guides the user through adding a new provider
-func (sw *SetupWizard) addProvider() error {
+func (pw *ProviderWizard) addProvider() error {
 	fmt.Println("\nAdding a new provider...")
 
 	// Show provider selection
-	providerID, err := sw.selectProvider()
+	providerID, err := pw.selectProvider()
 	if err != nil {
 		return err
 	}
 
 	// Get provider definition
-	def, err := sw.registry.GetProviderDefinition(providerID)
+	def, err := pw.registry.GetProviderDefinition(providerID)
 	if err != nil {
 		return err
 	}
@@ -181,27 +182,27 @@ func (sw *SetupWizard) addProvider() error {
 	}
 
 	// Collect required fields
-	if err := sw.collectRequiredFields(def, &providerConfig); err != nil {
+	if err := pw.collectRequiredFields(def, &providerConfig); err != nil {
 		return err
 	}
 
 	// Collect optional fields
-	if err := sw.collectOptionalFields(def, &providerConfig); err != nil {
+	if err := pw.collectOptionalFields(def, &providerConfig); err != nil {
 		return err
 	}
 
 	// Select model
-	if err := sw.selectModel(def, &providerConfig); err != nil {
+	if err := pw.selectModel(def, &providerConfig); err != nil {
 		return err
 	}
 
 	// Validate configuration
-	if err := sw.registry.ValidateProviderConfig(providerConfig); err != nil {
+	if err := pw.registry.ValidateProviderConfig(providerConfig); err != nil {
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
 	// Add to config
-	if err := sw.configManager.AddProvider(providerConfig); err != nil {
+	if err := pw.configManager.AddProvider(providerConfig); err != nil {
 		return fmt.Errorf("failed to add provider: %w", err)
 	}
 
@@ -210,7 +211,7 @@ func (sw *SetupWizard) addProvider() error {
 }
 
 // selectProvider shows provider selection interface
-func (sw *SetupWizard) selectProvider() (string, error) {
+func (pw *ProviderWizard) selectProvider() (string, error) {
 	// Show selection method
 	method := ""
 	methodPrompt := &survey.Select{
@@ -228,23 +229,23 @@ func (sw *SetupWizard) selectProvider() (string, error) {
 
 	switch method {
 	case "View popular providers":
-		return sw.selectFromPopularProviders()
+		return pw.selectFromPopularProviders()
 	case "Search providers":
-		return sw.searchAndSelectProvider()
+		return pw.searchAndSelectProvider()
 	case "View all providers":
-		return sw.selectFromAllProviders()
+		return pw.selectFromAllProviders()
 	default:
 		return "", fmt.Errorf("invalid selection method")
 	}
 }
 
 // selectFromPopularProviders shows popular providers
-func (sw *SetupWizard) selectFromPopularProviders() (string, error) {
-	popular := sw.registry.GetPopularProviders()
+func (pw *ProviderWizard) selectFromPopularProviders() (string, error) {
+	popular := pw.registry.GetPopularProviders()
 
 	providerOptions := make([]string, len(popular))
 	for i, providerID := range popular {
-		providerOptions[i] = fmt.Sprintf("%s (%s)", sw.registry.GetProviderDisplayName(providerID), providerID)
+		providerOptions[i] = fmt.Sprintf("%s (%s)", pw.registry.GetProviderDisplayName(providerID), providerID)
 	}
 
 	var selectedProvider string
@@ -269,7 +270,7 @@ func (sw *SetupWizard) selectFromPopularProviders() (string, error) {
 }
 
 // searchAndSelectProvider allows searching for providers
-func (sw *SetupWizard) searchAndSelectProvider() (string, error) {
+func (pw *ProviderWizard) searchAndSelectProvider() (string, error) {
 	var query string
 	searchPrompt := &survey.Input{
 		Message: "Enter search term (provider name, company, etc.):",
@@ -279,14 +280,14 @@ func (sw *SetupWizard) searchAndSelectProvider() (string, error) {
 		return "", fmt.Errorf("failed to get search query: %w", err)
 	}
 
-	matches := sw.registry.SearchProviders(query)
+	matches := pw.registry.SearchProviders(query)
 	if len(matches) == 0 {
 		return "", fmt.Errorf("no providers found matching '%s'", query)
 	}
 
 	providerOptions := make([]string, len(matches))
 	for i, providerID := range matches {
-		providerOptions[i] = fmt.Sprintf("%s (%s)", sw.registry.GetProviderDisplayName(providerID), providerID)
+		providerOptions[i] = fmt.Sprintf("%s (%s)", pw.registry.GetProviderDisplayName(providerID), providerID)
 	}
 
 	var selectedProvider string
@@ -311,12 +312,12 @@ func (sw *SetupWizard) searchAndSelectProvider() (string, error) {
 }
 
 // selectFromAllProviders shows all available providers
-func (sw *SetupWizard) selectFromAllProviders() (string, error) {
-	allProviders := sw.registry.GetAllProviders()
+func (pw *ProviderWizard) selectFromAllProviders() (string, error) {
+	allProviders := pw.registry.GetAllProviders()
 
 	providerOptions := make([]string, len(allProviders))
 	for i, providerID := range allProviders {
-		providerOptions[i] = fmt.Sprintf("%s (%s)", sw.registry.GetProviderDisplayName(providerID), providerID)
+		providerOptions[i] = fmt.Sprintf("%s (%s)", pw.registry.GetProviderDisplayName(providerID), providerID)
 	}
 
 	var selectedProvider string
@@ -342,7 +343,7 @@ func (sw *SetupWizard) selectFromAllProviders() (string, error) {
 }
 
 // collectRequiredFields collects required configuration fields
-func (sw *SetupWizard) collectRequiredFields(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
+func (pw *ProviderWizard) collectRequiredFields(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
 	if len(def.RequiredFields) == 0 {
 		return nil
 	}
@@ -350,17 +351,17 @@ func (sw *SetupWizard) collectRequiredFields(def *generated.ProviderDefinition, 
 	fmt.Println("Required configuration:")
 
 	for _, field := range def.RequiredFields {
-		value, err := sw.promptForField(field, true)
+		value, err := pw.promptForField(field, true)
 		if err != nil {
 			return err
 		}
 
 		// Use the proper field mapper to handle complex multi-key providers
-		MapFieldToConfig(field, value, providerConfig)
+		setup.MapFieldToConfig(field, value, providerConfig)
 	}
 
-	// Validate all required fields were collected
-	if err := ValidateRequiredFields(def.ID, *providerConfig, def.RequiredFields); err != nil {
+	// Validate all required fields
+	if err := setup.ValidateRequiredFields(def.ID, *providerConfig, def.RequiredFields); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -368,7 +369,7 @@ func (sw *SetupWizard) collectRequiredFields(def *generated.ProviderDefinition, 
 }
 
 // collectOptionalFields collects optional configuration fields
-func (sw *SetupWizard) collectOptionalFields(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
+func (pw *ProviderWizard) collectOptionalFields(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
 	if len(def.OptionalFields) == 0 {
 		return nil
 	}
@@ -390,7 +391,7 @@ func (sw *SetupWizard) collectOptionalFields(def *generated.ProviderDefinition, 
 	fmt.Println("Optional configuration:")
 
 	for _, field := range def.OptionalFields {
-		value, err := sw.promptForField(field, false)
+		value, err := pw.promptForField(field, false)
 		if err != nil {
 			return err
 		}
@@ -410,7 +411,7 @@ func (sw *SetupWizard) collectOptionalFields(def *generated.ProviderDefinition, 
 }
 
 // promptForField prompts for a single configuration field
-func (sw *SetupWizard) promptForField(field generated.ConfigField, required bool) (string, error) {
+func (pw *ProviderWizard) promptForField(field generated.ConfigField, required bool) (string, error) {
 	message := field.Name
 	if field.Comment != "" {
 		message += fmt.Sprintf(" (%s)", field.Comment)
@@ -453,7 +454,7 @@ func (sw *SetupWizard) promptForField(field generated.ConfigField, required bool
 }
 
 // showModelList fetches and displays available models for a provider
-func (sw *SetupWizard) showModelList(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
+func (pw *ProviderWizard) showModelList(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
 	var modelMap map[string]config.ModelInfo
 	var fetchErr error
 
@@ -519,7 +520,7 @@ func (sw *SetupWizard) showModelList(def *generated.ProviderDefinition, provider
 		selection = strings.TrimSpace(selection)
 
 		// Handle pagination commands
-		if strings.ToLower(selection) == "next" {
+		if strings.ToLower(selection) == "next" || strings.ToLower(selection) == "n" {
 			if currentPage < len(pages)-1 {
 				currentPage++
 				continue
@@ -529,7 +530,7 @@ func (sw *SetupWizard) showModelList(def *generated.ProviderDefinition, provider
 			}
 		}
 
-		if strings.ToLower(selection) == "back" || strings.ToLower(selection) == "prev" || strings.ToLower(selection) == "previous" {
+		if strings.ToLower(selection) == "back" || strings.ToLower(selection) == "prev" || strings.ToLower(selection) == "b" {
 			if currentPage > 0 {
 				currentPage--
 				continue
@@ -560,7 +561,7 @@ func (sw *SetupWizard) showModelList(def *generated.ProviderDefinition, provider
 }
 
 // selectModel helps user select a model for the provider
-func (sw *SetupWizard) selectModel(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
+func (pw *ProviderWizard) selectModel(def *generated.ProviderDefinition, providerConfig *config.ProviderConfig) error {
 	// Use default model if available
 	if def.DefaultModelID != "" {
 		useDefault := true
@@ -606,7 +607,7 @@ func (sw *SetupWizard) selectModel(def *generated.ProviderDefinition, providerCo
 		if strings.ToLower(modelInput) == "list" {
 			// showModelList handles the complete selection process
 			// If it returns nil, a model was successfully selected
-			if err := sw.showModelList(def, providerConfig); err != nil {
+			if err := pw.showModelList(def, providerConfig); err != nil {
 				fmt.Printf("Error displaying models: %v\n", err)
 				fmt.Println("Continuing with manual model entry...")
 				continue
@@ -651,8 +652,8 @@ func (sw *SetupWizard) selectModel(def *generated.ProviderDefinition, providerCo
 }
 
 // removeProvider removes a configured provider
-func (sw *SetupWizard) removeProvider() error {
-	cliConfig := sw.configManager.GetConfig()
+func (pw *ProviderWizard) removeProvider() error {
+	cliConfig := pw.configManager.GetConfig()
 	if len(cliConfig.Providers) == 0 {
 		fmt.Println("No providers configured.")
 		return nil
@@ -706,7 +707,7 @@ func (sw *SetupWizard) removeProvider() error {
 	}
 
 	// Remove provider
-	if err := sw.configManager.RemoveProvider(providerID); err != nil {
+	if err := pw.configManager.RemoveProvider(providerID); err != nil {
 		return fmt.Errorf("failed to remove provider: %w", err)
 	}
 
@@ -715,8 +716,8 @@ func (sw *SetupWizard) removeProvider() error {
 }
 
 // listConfiguredProviders lists all configured providers
-func (sw *SetupWizard) listConfiguredProviders() {
-	cliConfig := sw.configManager.GetConfig()
+func (pw *ProviderWizard) listConfiguredProviders() {
+	cliConfig := pw.configManager.GetConfig()
 	if cliConfig == nil || len(cliConfig.Providers) == 0 {
 		fmt.Println("No providers configured.")
 		return
@@ -741,8 +742,8 @@ func (sw *SetupWizard) listConfiguredProviders() {
 }
 
 // testProviders tests provider connections
-func (sw *SetupWizard) testProviders() error {
-	cliConfig := sw.configManager.GetConfig()
+func (pw *ProviderWizard) testProviders() error {
+	cliConfig := pw.configManager.GetConfig()
 	if len(cliConfig.Providers) == 0 {
 		fmt.Println("No providers configured to test.")
 		return nil
@@ -755,7 +756,7 @@ func (sw *SetupWizard) testProviders() error {
 		fmt.Printf("Testing %s (%s)... ", provider.Name, id)
 
 		// Basic validation
-		if err := sw.registry.ValidateProviderConfig(provider); err != nil {
+		if err := pw.registry.ValidateProviderConfig(provider); err != nil {
 			fmt.Printf("Failed: %v\n", err)
 		} else {
 			fmt.Printf("Configuration valid\n")
@@ -766,8 +767,8 @@ func (sw *SetupWizard) testProviders() error {
 }
 
 // setDefaultProvider sets the default provider
-func (sw *SetupWizard) setDefaultProvider() error {
-	cliConfig := sw.configManager.GetConfig()
+func (pw *ProviderWizard) setDefaultProvider() error {
+	cliConfig := pw.configManager.GetConfig()
 	if len(cliConfig.Providers) == 0 {
 		fmt.Println("No providers configured.")
 		return nil
@@ -809,7 +810,7 @@ func (sw *SetupWizard) setDefaultProvider() error {
 	providerID := strings.TrimSpace(selectedProvider[lastOpenParen+1 : lastCloseParen])
 
 	// Set default provider
-	if err := sw.configManager.SetDefaultProvider(providerID); err != nil {
+	if err := pw.configManager.SetDefaultProvider(providerID); err != nil {
 		return fmt.Errorf("failed to set default provider: %w", err)
 	}
 
@@ -818,20 +819,20 @@ func (sw *SetupWizard) setDefaultProvider() error {
 }
 
 // saveAndExit saves the configuration and exits
-func (sw *SetupWizard) saveAndExit() error {
-	cliConfig := sw.configManager.GetConfig()
+func (pw *ProviderWizard) saveAndExit() error {
+	cliConfig := pw.configManager.GetConfig()
 	if len(cliConfig.Providers) == 0 {
 		fmt.Println("No providers configured. Nothing to save.")
 		return nil
 	}
 
 	// Validate configuration
-	if err := sw.configManager.Validate(cliConfig); err != nil {
+	if err := pw.configManager.Validate(cliConfig); err != nil {
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
 	// Save configuration
-	if err := sw.configManager.Save(cliConfig); err != nil {
+	if err := pw.configManager.Save(cliConfig); err != nil {
 		return fmt.Errorf("failed to save configuration: %w", err)
 	}
 

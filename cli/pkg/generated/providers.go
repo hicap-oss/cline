@@ -185,14 +185,16 @@ type ModelInfo struct {
 
 // ProviderDefinition represents a provider's metadata and requirements
 type ProviderDefinition struct {
-	ID              string                 `json:"id"`
-	Name            string                 `json:"name"`
-	RequiredFields  []ConfigField          `json:"requiredFields"`
-	OptionalFields  []ConfigField          `json:"optionalFields"`
-	Models          map[string]ModelInfo   `json:"models"`
-	DefaultModelID  string                 `json:"defaultModelId"`
-	HasDynamicModels bool                  `json:"hasDynamicModels"`
-	SetupInstructions string               `json:"setupInstructions"`
+	ID                   string                 `json:"id"`
+	Name                 string                 `json:"name"`
+	RequiredFields       []ConfigField          `json:"requiredFields"`
+	OptionalFields       []ConfigField          `json:"optionalFields"`
+	Models               map[string]ModelInfo   `json:"models"`
+	DefaultModelID       string                 `json:"defaultModelId"`
+	HasDynamicModels     bool                   `json:"hasDynamicModels"`
+	SupportsModelListing bool                   `json:"supportsModelListing"`
+	ModelListEndpoint    string                 `json:"modelListEndpoint"`
+	SetupInstructions    string                 `json:"setupInstructions"`
 }
 
 // Raw configuration fields data (parsed from TypeScript)
@@ -1211,14 +1213,16 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 
 	// OpenRouter
 	definitions["openrouter"] = ProviderDefinition{
-		ID:              "openrouter",
-		Name:            "OpenRouter",
-		RequiredFields:  getFieldsByProvider("openrouter", configFields, true),
-		OptionalFields:  getFieldsByProvider("openrouter", configFields, false),
-		Models:          modelDefinitions["openrouter"],
-		DefaultModelID:  "",
-		HasDynamicModels: true,
-		SetupInstructions: `Get your API key from https://openrouter.ai/keys`,
+		ID:                   "openrouter",
+		Name:                 "OpenRouter",
+		RequiredFields:       getFieldsByProvider("openrouter", configFields, true),
+		OptionalFields:       getFieldsByProvider("openrouter", configFields, false),
+		Models:               modelDefinitions["openrouter"],
+		DefaultModelID:       "",
+		HasDynamicModels:     true,
+		SupportsModelListing: true,
+		ModelListEndpoint:    "https://openrouter.ai/api/v1/models",
+		SetupInstructions:    `Get your API key from https://openrouter.ai/keys`,
 	}
 
 	// AWS Bedrock
@@ -1235,26 +1239,30 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 
 	// OpenAI Compatible
 	definitions["openai"] = ProviderDefinition{
-		ID:              "openai",
-		Name:            "OpenAI Compatible",
-		RequiredFields:  getFieldsByProvider("openai", configFields, true),
-		OptionalFields:  getFieldsByProvider("openai", configFields, false),
-		Models:          modelDefinitions["openai"],
-		DefaultModelID:  "",
-		HasDynamicModels: true,
-		SetupInstructions: `Get your API key from https://platform.openai.com/api-keys`,
+		ID:                   "openai",
+		Name:                 "OpenAI Compatible",
+		RequiredFields:       getFieldsByProvider("openai", configFields, true),
+		OptionalFields:       getFieldsByProvider("openai", configFields, false),
+		Models:               modelDefinitions["openai"],
+		DefaultModelID:       "",
+		HasDynamicModels:     true,
+		SupportsModelListing: true,
+		ModelListEndpoint:    "{baseUrl}/v1/models",
+		SetupInstructions:    `Get your API key from https://platform.openai.com/api-keys`,
 	}
 
 	// Ollama
 	definitions["ollama"] = ProviderDefinition{
-		ID:              "ollama",
-		Name:            "Ollama",
-		RequiredFields:  getFieldsByProvider("ollama", configFields, true),
-		OptionalFields:  getFieldsByProvider("ollama", configFields, false),
-		Models:          modelDefinitions["ollama"],
-		DefaultModelID:  "",
-		HasDynamicModels: true,
-		SetupInstructions: `Install Ollama locally and ensure it's running on the specified port`,
+		ID:                   "ollama",
+		Name:                 "Ollama",
+		RequiredFields:       getFieldsByProvider("ollama", configFields, true),
+		OptionalFields:       getFieldsByProvider("ollama", configFields, false),
+		Models:               modelDefinitions["ollama"],
+		DefaultModelID:       "",
+		HasDynamicModels:     true,
+		SupportsModelListing: true,
+		ModelListEndpoint:    "{baseUrl}/api/tags",
+		SetupInstructions:    `Install Ollama locally and ensure it's running on the specified port`,
 	}
 
 	// Google Gemini
@@ -1271,14 +1279,16 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 
 	// OpenAI
 	definitions["openai-native"] = ProviderDefinition{
-		ID:              "openai-native",
-		Name:            "OpenAI",
-		RequiredFields:  getFieldsByProvider("openai-native", configFields, true),
-		OptionalFields:  getFieldsByProvider("openai-native", configFields, false),
-		Models:          modelDefinitions["openai-native"],
-		DefaultModelID:  "gpt-5-chat-latest",
-		HasDynamicModels: true,
-		SetupInstructions: `Get your API key from your API provider`,
+		ID:                   "openai-native",
+		Name:                 "OpenAI",
+		RequiredFields:       getFieldsByProvider("openai-native", configFields, true),
+		OptionalFields:       getFieldsByProvider("openai-native", configFields, false),
+		Models:               modelDefinitions["openai-native"],
+		DefaultModelID:       "gpt-5-chat-latest",
+		HasDynamicModels:     true,
+		SupportsModelListing: true,
+		ModelListEndpoint:    "{baseUrl}/v1/models",
+		SetupInstructions:    `Get your API key from your API provider`,
 	}
 
 	// X AI (Grok)

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cline/cli/pkg/cli/auth"
 	"github.com/cline/cli/pkg/cli/global"
 	"github.com/cline/grpc-go/cline"
 	"github.com/spf13/cobra"
@@ -17,27 +18,58 @@ var isSessionAuthenticated bool
 
 func NewAuthCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "auth",
-		Short: "Sign in to Cline",
-		Long:  `Complete the authentication flow in browser to sign in to Cline.`,
+		Use:   "auth [provider] [key]",
+		Short: "Authenticate with Cline or configure API providers",
+		Long: `Authenticate with Cline account or configure API providers.
+
+Usage modes:
+  cline auth                     # Interactive menu: choose Cline auth or provider setup
+  cline auth [provider]          # Configure specific provider (prompts for API key)
+  cline auth [provider] [key]    # Fast setup with provider and API key
+
+Examples:
+  cline auth                          # Show interactive menu
+  cline auth anthropic                # Configure Anthropic (will prompt for key)
+  cline auth anthropic sk-ant-xxx     # Fast setup with Anthropic
+  cline auth openrouter sk-or-xxx     # Fast setup with OpenRouter`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return handleAuthCommand(cmd.Context())
+			return handleAuthCommand(cmd.Context(), args)
 		},
 	}
 }
 
-func handleAuthCommand(ctx context.Context) error {
-	fmt.Print("Authenticating with Cline...\n")
-	if IsAuthenticated(ctx) {
-		return signOutDialog(ctx)
+func handleAuthCommand(ctx context.Context, args []string) error {
+	// Route based on number of arguments
+	switch len(args) {
+	case 0:
+		// No args: Show menu to choose between Cline auth or provider setup
+		return handleAuthMenu(ctx)
+	case 1:
+		// One arg: Provider ID only, prompt for API key
+		return auth.FastSetup(args[0], "")
+	case 2:
+		// Two args: Provider ID and API key
+		return auth.FastSetup(args[0], args[1])
+	default:
+		return fmt.Errorf("too many arguments. Usage: cline auth [provider] [key]")
 	}
+}
 
-	if err := signIn(ctx); err != nil {
+func handleAuthMenu(ctx context.Context) error {
+	// Show menu to choose between Cline auth and provider setup
+	action, err := auth.ShowAuthMenu()
+	if err != nil {
 		return err
 	}
-	
-	fmt.Println("You are signed in!")
-	return nil
+
+	switch action {
+	case auth.AuthActionClineLogin:
+		return auth.HandleClineAuth(ctx)
+	case auth.AuthActionProviderSetup:
+		return auth.HandleProviderSetup()
+	default:
+		return fmt.Errorf("invalid action")
+	}
 }
 
 func signOut(ctx context.Context) error {
