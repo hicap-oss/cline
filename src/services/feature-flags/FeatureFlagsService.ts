@@ -86,6 +86,14 @@ export class FeatureFlagsService {
 		return this.getBooleanFlagEnabled(FeatureFlag.WORKOS_AUTH, false)
 	}
 
+	public getHooksEnabled(): boolean {
+		// Force refresh hooks flag by removing from cache if it exists as false
+		if (this.cache.get(FeatureFlag.HOOKS) === false) {
+			this.cache.delete(FeatureFlag.HOOKS)
+		}
+		return this.getBooleanFlagEnabled(FeatureFlag.HOOKS, true)
+	}
+
 	/**
 	 * Get the feature flag payload for advanced use cases
 	 * @param flagName The feature flag key

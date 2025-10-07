@@ -811,6 +811,10 @@ export class Controller {
 				user: this.stateManager.getGlobalStateKey("multiRootEnabled"),
 				featureFlag: featureFlagsService.getMultiRootEnabled(),
 			},
+			hooksEnabled: {
+				user: this.stateManager.getGlobalSettingsKey("hooksEnabled") ?? false,
+				featureFlag: featureFlagsService.getHooksEnabled(),
+			},
 			lastDismissedInfoBannerVersion,
 			lastDismissedModelBannerVersion,
 		}
