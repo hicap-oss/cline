@@ -266,7 +266,7 @@ export async function writeTaskSettingsToStorage(taskId: string, settings: Parti
 /**
  * Gets the paths to the workspace's .clinerules/hooks directories to search for
  * hooks. A workspace may not use hooks, and the resulting array will be empty. A
- * multi-root workspace may have multiple than hooks directories.
+ * multi-root workspace may have multiple hooks directories.
  */
 export async function getWorkspaceHooksDirs(): Promise<string[]> {
 	const workspaceRootPaths =

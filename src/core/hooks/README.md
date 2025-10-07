@@ -66,32 +66,32 @@ We use the same ts-proto approach that the webview-RPC system uses to define Typ
 
 ## Classes and Interfaces
 
-HookRunner<Input> class
+`HookRunner` class
 Responsibilities:
 - Run the hook with extra input data of shape Input and produce HookOutput
 - Times how long the hook ran, other metrics collection
 Commentary:
 - Abstracts the hook execution strategy so tests can run hooks without touching the filesystem
 
-StdioHookRunner<Input> extends HookRunner<Input>
+`StdioHookRunner` extends `HookRunner`
 Data:
 - Has a path to a specific script/executable
 Responsibilities:
 - Run the executable and manage its IO
 - JSON serialization of parameters to HookInput and deserialization of results to HookOutput
 
-NoOpHookRunner<Input>
+`NoOpHookRunner`
 Responsibilities:
 - Always indicates execution should proceed.
 
-CombinedHookRunner<Input>
+`CombinedHookRunner`
 Responsibilities:
 - Given a homogeneous set of hooks, runs them and combines the result.
 - If any hook indicates the hooks should stop, then the collective judgement is to stop.
 - Context contributions from all hooks are combined by this class.
 - Records the slowest hook, so we can let developers know why their hooks are slow.
 
-HookFactory class
+`HookFactory` class
 Responsibilities:
 - Does any workspace root and filesystem watching necessary to discover hooks.
 - Produces a hook of a given type (for example "PreToolUse"), on demand.
