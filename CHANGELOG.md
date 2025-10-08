@@ -2,8 +2,6 @@
 
 ## 3.32.7
 
-### Patch Changes
-
 - 9f25f8a: CLI Auth refactor
 - 3fa4106: Added checkpoints warning when users start a multiroot task
 - 1eaeb18: Add JP and Global inference profile options to Cline
