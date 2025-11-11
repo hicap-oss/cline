@@ -145,6 +145,7 @@ const (
 	XAI = "xai"
 	CEREBRAS = "cerebras"
 	OCA = "oca"
+	HICAP = "hicap"
 )
 
 // AllProviders returns a slice of enabled provider IDs for the CLI build.
@@ -161,6 +162,7 @@ var AllProviders = []string{
 	"xai",
 	"cerebras",
 	"oca",
+	"hicap"
 }
 
 // ConfigField represents a configuration field requirement
@@ -1432,6 +1434,17 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 		HasDynamicModels: false,
 		SetupInstructions: `Configure Oca API credentials`,
 	}
+
+	// Hicap
+	definitions["hicap"] = ProviderDefinition{
+		ID:              "hicap",
+		Name:            "hicap",
+		RequiredFields:  getFieldsByProvider("hicap", configFields, true),
+		OptionalFields:  getFieldsByProvider("hicap", configFields, false),
+		Models:          modelDefinitions["hicap"],
+		DefaultModelID:  "",
+		HasDynamicModels: true,
+	}
 	
 	return definitions, nil
 }
@@ -1459,6 +1472,7 @@ func GetProviderDisplayName(providerID string) string {
 		"xai": "X AI (Grok)",
 		"cerebras": "Cerebras",
 		"oca": "Oca",
+		"hicap": "hicap"
 	}
 	
 	if name, exists := displayNames[providerID]; exists {
