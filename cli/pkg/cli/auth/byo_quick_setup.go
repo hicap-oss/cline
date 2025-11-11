@@ -177,6 +177,7 @@ func validateQuickSetupProvider(providerID string) (cline.ApiProvider, error) {
 		cline.ApiProvider_CEREBRAS:      true,
 		cline.ApiProvider_OLLAMA:        true,
 		cline.ApiProvider_HICAP:         true,
+		cline.ApiProvider_NOUSRESEARCH:  true,
 	}
 
 	if !supportedProviders[provider] {

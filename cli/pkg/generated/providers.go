@@ -146,6 +146,7 @@ const (
 	CEREBRAS = "cerebras"
 	OCA = "oca"
 	HICAP = "hicap"
+	NOUSRESEARCH = "nousResearch"
 )
 
 // AllProviders returns a slice of enabled provider IDs for the CLI build.
@@ -163,6 +164,7 @@ var AllProviders = []string{
 	"cerebras",
 	"oca",
 	"hicap",
+	"nousResearch",
 }
 
 // ConfigField represents a configuration field requirement
@@ -321,6 +323,15 @@ var rawConfigFields = `	[
 	    "placeholder": "Enter your API key"
 	  },
 	  {
+	    "name": "nousResearchApiKey",
+	    "type": "string",
+	    "comment": "",
+	    "category": "nousResearch",
+	    "required": true,
+	    "fieldType": "password",
+	    "placeholder": "Enter your API key"
+	  },
+	  {
 	    "name": "ulid",
 	    "type": "string",
 	    "comment": "Used to identify the task in API requests",
@@ -436,6 +447,15 @@ var rawConfigFields = `	[
 	    "required": false,
 	    "fieldType": "url",
 	    "placeholder": "https://api.example.com"
+	  },
+	  {
+	    "name": "minimaxApiLine",
+	    "type": "string",
+	    "comment": "",
+	    "category": "general",
+	    "required": false,
+	    "fieldType": "string",
+	    "placeholder": ""
 	  },
 	  {
 	    "name": "ocaMode",
@@ -777,6 +797,24 @@ var rawModelDefinitions = `	{
 	      "supportsImages": false,
 	      "supportsPromptCache": false,
 	      "description": "A compact 20B open-weight Mixture-of-Experts language model designed for strong reasoning and tool use, ideal for edge devices and local inference."
+	    },
+	    "qwen.qwen3-coder-30b-a3b-v1:0": {
+	      "maxTokens": 8192,
+	      "contextWindow": 262144,
+	      "inputPrice": 0,
+	      "outputPrice": 0,
+	      "supportsImages": false,
+	      "supportsPromptCache": false,
+	      "description": "Qwen3 Coder 30B MoE model with 3.3B activated parameters, optimized for code generation and analysis with 256K context window."
+	    },
+	    "qwen.qwen3-coder-480b-a35b-v1:0": {
+	      "maxTokens": 8192,
+	      "contextWindow": 262144,
+	      "inputPrice": 0,
+	      "outputPrice": 1,
+	      "supportsImages": false,
+	      "supportsPromptCache": false,
+	      "description": "Qwen3 Coder 480B flagship MoE model with 35B activated parameters, designed for complex coding tasks with advanced reasoning capabilities and 256K context window."
 	    }
 	  },
 	  "gemini": {
@@ -1265,6 +1303,26 @@ var rawModelDefinitions = `	{
 	      "supportsPromptCache": false,
 	      "description": "SOTA performance with ~1500 tokens/s"
 	    }
+	  },
+	  "nousResearch": {
+	    "Hermes-4-405B": {
+	      "maxTokens": 8192,
+	      "contextWindow": 128000,
+	      "inputPrice": 0,
+	      "outputPrice": 0,
+	      "supportsImages": false,
+	      "supportsPromptCache": false,
+	      "description": "This is the largest model in the Hermes 4 family, and it is the fullest expression of our design, focused on advanced reasoning and creative depth rather than optimizing inference speed or cost."
+	    },
+	    "Hermes-4-70B": {
+	      "maxTokens": 8192,
+	      "contextWindow": 128000,
+	      "inputPrice": 0,
+	      "outputPrice": 0,
+	      "supportsImages": false,
+	      "supportsPromptCache": false,
+	      "description": "This incarnation of Hermes 4 balances scale and size. It handles complex reasoning tasks, while staying fast and cost effective. A versatile choice for many use cases."
+	    }
 	  }
 	}`
 
@@ -1445,6 +1503,16 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 		DefaultModelID:  "",
 		HasDynamicModels: true,
 		SetupInstructions: `Configure Hicap API credentials`,
+	// NousResearch
+	definitions["nousResearch"] = ProviderDefinition{
+		ID:              "nousResearch",
+		Name:            "NousResearch",
+		RequiredFields:  getFieldsByProvider("nousResearch", configFields, true),
+		OptionalFields:  getFieldsByProvider("nousResearch", configFields, false),
+		Models:          modelDefinitions["nousResearch"],
+		DefaultModelID:  "Hermes-4-405B",
+		HasDynamicModels: false,
+		SetupInstructions: `Configure NousResearch API credentials`,
 	}
 	
 	return definitions, nil
@@ -1474,6 +1542,7 @@ func GetProviderDisplayName(providerID string) string {
 		"cerebras": "Cerebras",
 		"oca": "Oca",
 		"hicap": "Hicap",
+		"nousResearch": "NousResearch",
 	}
 	
 	if name, exists := displayNames[providerID]; exists {
