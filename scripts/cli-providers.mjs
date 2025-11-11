@@ -347,6 +347,7 @@ function parseConfigurationFields(optionsContent, providerApiKeyMap, apiSecretsF
 			"together",
 			"claudecode",
 			"cline",
+			"hicap",
 		]
 
 		// If field name starts with or contains a provider prefix, categorize it as provider-specific
@@ -445,6 +446,7 @@ function extractModelDefinitions(content) {
 			nebius: "nebius",
 			askSage: "asksage",
 			qwenCode: "qwen-code",
+			hicap: "hicap",
 		}
 
 		const providerId = providerMapping[providerPrefix] || providerPrefix.toLowerCase()
@@ -892,6 +894,7 @@ function getProviderDisplayName(providerId) {
 		baseten: "Baseten",
 		"vercel-ai-gateway": "Vercel AI Gateway",
 		zai: "Z AI",
+		hicap: "Hicap",
 	}
 
 	return displayNames[providerId] || providerId.charAt(0).toUpperCase() + providerId.slice(1)
@@ -937,6 +940,7 @@ function hasDynamicModelsSupport(providerId) {
 		"together",
 		"fireworks",
 		"groq",
+		"hicap",
 	]
 
 	return dynamicProviders.includes(providerId)
