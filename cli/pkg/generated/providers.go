@@ -162,7 +162,7 @@ var AllProviders = []string{
 	"xai",
 	"cerebras",
 	"oca",
-	"hicap"
+	"hicap",
 }
 
 // ConfigField represents a configuration field requirement
@@ -1444,6 +1444,7 @@ func GetProviderDefinitions() (map[string]ProviderDefinition, error) {
 		Models:          modelDefinitions["hicap"],
 		DefaultModelID:  "",
 		HasDynamicModels: true,
+		SetupInstructions: `Configure Hicap API credentials`,
 	}
 	
 	return definitions, nil
@@ -1472,7 +1473,7 @@ func GetProviderDisplayName(providerID string) string {
 		"xai": "X AI (Grok)",
 		"cerebras": "Cerebras",
 		"oca": "Oca",
-		"hicap": "hicap"
+		"hicap": "hicap",
 	}
 	
 	if name, exists := displayNames[providerID]; exists {
