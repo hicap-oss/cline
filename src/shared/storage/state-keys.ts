@@ -138,7 +138,6 @@ const API_HANDLER_SETTINGS_FIELDS = {
 	ocaMode: { default: "internal" as string },
 	aihubmixBaseUrl: { default: undefined as string | undefined },
 	aihubmixAppCode: { default: undefined as string | undefined },
-	hicapApiEndpoint: { default: undefined as string | undefined },
 	hicapUseResponsesApi: { default: false as boolean },
 	hicapMaxOutputTokens: { default: undefined as number | undefined },
 	hicapTemperature: { default: undefined as number | undefined },

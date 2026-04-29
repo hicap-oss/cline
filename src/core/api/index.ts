@@ -449,7 +449,6 @@ function createHandlerForProvider(
 				onRetryAttempt: options.onRetryAttempt,
 				hicapApiKey: options.hicapApiKey,
 				hicapModelId: mode === "plan" ? options.planModeHicapModelId : options.actModeHicapModelId,
-				hicapApiEndpoint: options.hicapApiEndpoint,
 				hicapUseResponsesApi: options.hicapUseResponsesApi,
 				hicapMaxOutputTokens: options.hicapMaxOutputTokens,
 				hicapTemperature: options.hicapTemperature,

@@ -6,7 +6,7 @@ import type {
 	ChatCompletionReasoningEffort,
 	ChatCompletionTool,
 } from "openai/resources/chat/completions"
-import { getHicapBaseUrl, supportsHicapResponsesApi } from "@/shared/clients/hicap"
+import { getHicapBaseUrl, HICAP_TAG_HEADER, HICAP_TAG_VALUE, supportsHicapResponsesApi } from "@/shared/clients/hicap"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
 import { ApiFormat } from "@/shared/proto/cline/models"
@@ -21,7 +21,6 @@ import { handleResponsesApiStreamResponse } from "../utils/responses_api_support
 interface OpenAiHandlerOptions extends CommonApiHandlerOptions {
 	hicapApiKey?: string
 	hicapModelId?: string
-	hicapApiEndpoint?: string
 	hicapUseResponsesApi?: boolean
 	hicapMaxOutputTokens?: number
 	hicapTemperature?: number
@@ -47,10 +46,11 @@ export class HicapHandler implements ApiHandler {
 			}
 			try {
 				this.client = createOpenAIClient({
-					baseURL: getHicapBaseUrl(this.options.hicapApiEndpoint),
+					baseURL: getHicapBaseUrl(),
 					apiKey: this.options.hicapApiKey,
 					defaultHeaders: {
 						"api-key": this.options.hicapApiKey,
+						[HICAP_TAG_HEADER]: HICAP_TAG_VALUE,
 					},
 				})
 			} catch (error) {

@@ -30,9 +30,8 @@ export async function refreshHicapModels(controller: Controller, _request: Empty
 	try {
 		// Get the Hicap API key from the controller's state
 		const hicapApiKey = controller.stateManager.getSecretKey("hicapApiKey")
-		const hicapApiEndpoint = controller.stateManager.getGlobalSettingsKey("hicapApiEndpoint")
 
-		const response = await axios.get(getHicapModelsUrl(hicapApiEndpoint), {
+		const response = await axios.get(getHicapModelsUrl(), {
 			headers: {
 				"api-key": hicapApiKey,
 			},
