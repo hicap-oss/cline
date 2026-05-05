@@ -289,7 +289,7 @@ message Settings {
   optional bool lazy_teammate_mode_enabled = 183;
   optional bool hicap_use_responses_api = 184;
   optional int32 hicap_max_output_tokens = 186;
-  optional int32 hicap_temperature = 187;
+  optional double hicap_temperature = 187;
 }
 
 message State {
