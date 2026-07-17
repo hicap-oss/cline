@@ -5,6 +5,7 @@ import axios from "axios"
 import fs from "fs/promises"
 import path from "path"
 import { getAxiosSettings } from "@/shared/net"
+import { Logger } from "@/shared/services/Logger"
 import { Controller } from ".."
 
 /**
@@ -61,8 +62,9 @@ export async function refreshHicapModels(controller: Controller, _request: Empty
 			}
 		}
 		await fs.writeFile(hicapModelsFilePath, JSON.stringify(models))
-	} catch (_error) {
+	} catch (error) {
 		// If we failed to fetch models, keep whatever we have.
+		Logger.error("Error fetching Hicap models:", error)
 	}
 
 	return OpenRouterCompatibleModelInfo.create({ models })
