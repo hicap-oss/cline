@@ -5,7 +5,7 @@ import { useEffect } from "react"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { AccountServiceClient } from "@/services/grpc-client"
 import { DebouncedTextField } from "../common/DebouncedTextField"
-import HicapModelPicker from "../HicapModelPicker"
+import HicapModelPicker, { HICAP_API_KEY_LENGTH } from "../HicapModelPicker"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
 
 /**
@@ -25,7 +25,7 @@ export const HicapProvider = ({ showModelOptions, isPopup, currentMode }: HicapP
 	const { handleFieldChange } = useApiConfigurationHandlers()
 
 	useEffect(() => {
-		if (apiConfiguration?.hicapApiKey && apiConfiguration?.hicapApiKey.length === 32) {
+		if (apiConfiguration?.hicapApiKey && apiConfiguration?.hicapApiKey.length === HICAP_API_KEY_LENGTH) {
 			refreshHicapModels()
 		}
 	}, [apiConfiguration?.hicapApiKey])
@@ -37,9 +37,6 @@ export const HicapProvider = ({ showModelOptions, isPopup, currentMode }: HicapP
 					initialValue={apiConfiguration?.hicapApiKey || ""}
 					onChange={(value) => {
 						handleFieldChange("hicapApiKey", value)
-						if (value.length === 32) {
-							refreshHicapModels()
-						}
 					}}
 					placeholder="Enter API Key..."
 					style={{ width: "100%" }}
