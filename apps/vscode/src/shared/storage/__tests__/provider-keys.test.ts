@@ -25,6 +25,21 @@ describe("Provider key mapping", () => {
 		expect(getProviderDefaultModelId("hicap")).to.equal("")
 	})
 
+	it("uses the Hicap-specific model key and defers the default until refresh", () => {
+		expect(getProviderModelIdKey("hicap", "act")).to.equal("actModeHicapModelId")
+		expect(getProviderModelIdKey("hicap", "plan")).to.equal("planModeHicapModelId")
+		// Hicap resolves its catalog from the authenticated endpoint, so there is
+		// no static default to nominate before a refresh happens.
+		expect(getProviderDefaultModelId("hicap")).to.equal("")
+	})
+
+	it("keeps the Hicap SDK provider registered with its OpenAI-compatible endpoint", () => {
+		const collection = getProviderCollectionSync("hicap")
+		expect(collection?.provider.id).to.equal("hicap")
+		expect(collection?.provider.baseUrl).to.equal("https://api.hicap.ai/v1")
+		expect(collection?.provider.defaultModelId).to.equal("hicap-pro")
+	})
+
 	it("uses generic model key for Moonshot", () => {
 		expect(getProviderModelIdKey("moonshot", "act")).to.equal("actModeApiModelId")
 		expect(getProviderModelIdKey("moonshot", "plan")).to.equal("planModeApiModelId")

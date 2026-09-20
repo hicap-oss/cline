@@ -668,6 +668,67 @@ describe("resolveProviderConfig", () => {
 		);
 	});
 
+	it("loads Hicap models using the api-key header", async () => {
+		const fetchMock = vi.fn(async () => {
+			return new Response(
+				JSON.stringify({
+					data: [{ id: "hicap-pro" }, { id: " " }, {}],
+				}),
+				{
+					status: 200,
+					headers: { "content-type": "application/json" },
+				},
+			);
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		const resolved = await resolveProviderConfig(
+			"hicap",
+			{ failOnError: true, cacheTtlMs: 0 },
+			{
+				providerId: "hicap",
+				modelId: "hicap-pro",
+				apiKey: "hicap-test-key",
+				baseUrl: "https://api.hicap.ai/v1",
+			},
+		);
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			"https://api.hicap.ai/v2/openai/models",
+			expect.objectContaining({
+				method: "GET",
+				headers: expect.objectContaining({ "api-key": "hicap-test-key" }),
+			}),
+		);
+		expect(Object.keys(resolved?.knownModels ?? {})).toEqual(["hicap-pro"]);
+		expect(resolved?.knownModels?.["hicap-pro"]).toEqual(
+			expect.objectContaining({
+				name: "hicap-pro",
+				maxInputTokens: 128_000,
+			}),
+		);
+	});
+
+	it("surfaces Hicap refresh failures when failOnError is set", async () => {
+		const fetchMock = vi.fn(
+			async () => new Response("unauthorized", { status: 401 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(
+			resolveProviderConfig(
+				"hicap",
+				{ failOnError: true, cacheTtlMs: 0 },
+				{
+					providerId: "hicap",
+					modelId: "hicap-pro",
+					apiKey: "hicap-test-key",
+					baseUrl: "https://api.hicap.ai/v1",
+				},
+			),
+		).rejects.toThrow(/Hicap model refresh failed: HTTP 401/);
+	});
+
 	it("falls back to /model/info for LiteLLM private models", async () => {
 		const fetchMock = vi
 			.fn()
