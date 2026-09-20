@@ -12,6 +12,9 @@ import { useApiConfigurationHandlers } from "./utils/useApiConfigurationHandlers
 
 const HICAP_MODEL_PICKER_Z_INDEX = 1_000
 
+/** Expected length of a valid Hicap API key. */
+export const HICAP_API_KEY_LENGTH = 32
+
 // Star icon for favorites
 const StarIcon = ({ isFavorite, onClick }: { isFavorite: boolean; onClick: (e: React.MouseEvent) => void }) => {
 	return (
@@ -171,7 +174,10 @@ const HicapModelPicker: React.FC<HicapModelPickerProps> = ({ isPopup, currentMod
 				<div className="relative w-full" ref={dropdownRef}>
 					<VSCodeTextField
 						className="w-full relative"
-						disabled={apiConfiguration?.hicapApiKey?.length !== 32 || Object.keys(hicapModels).length === 0}
+						disabled={
+							apiConfiguration?.hicapApiKey?.length !== HICAP_API_KEY_LENGTH ||
+							Object.keys(hicapModels).length === 0
+						}
 						id="model-search"
 						onFocus={() => setIsDropdownVisible(true)}
 						onInput={(e) => {
